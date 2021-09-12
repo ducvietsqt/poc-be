@@ -9,6 +9,7 @@ module.exports = {
         where: {
           user_id: req.params.user_id
         },
+        order: [["bet_spin", "DESC"]],
         raw: true
       });
       return res.ok(result);
