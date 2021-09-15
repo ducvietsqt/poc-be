@@ -62,7 +62,10 @@ const config = {
     private: fs.readFileSync(path.resolve(__dirname, "../../key/private.key"), "utf8"),
     public: fs.readFileSync(path.resolve(__dirname, "../../key/public.key"), "utf8")
   },
-  enableSeed: process.env.ENABLE_SEED == "1"
+  enableSeed: process.env.ENABLE_SEED == "1",
+  insight: { 
+    url: process.env.POC_INSIGHT || "http://62.171.139.103:3002"
+  }
 };
 
 module.exports = config;

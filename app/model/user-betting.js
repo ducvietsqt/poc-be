@@ -32,6 +32,14 @@ module.exports = (sequelize, DataTypes) => {
     number_win: {
       type: DataTypes.INTEGER,
       allowNull: true
+    },
+    bet_tx_hash: {
+      type: DataTypes.STRING(256),
+      allowNull: true
+    },
+    bet_success: {
+      type: DataTypes.BOOLEAN,
+      allowNull: true
     }
   }, {
     underscored: true,

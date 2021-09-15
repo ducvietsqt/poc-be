@@ -1,12 +1,18 @@
 const logger = require("app/lib/logger");
 const Model = require("app/model").spins;
 const UserBetting = require("app/model").user_bettings;
+const Insight = require("app/service/poc-insight");
 
 module.exports = {
   index: async (req, res, next) => {
     try {
+      let current = await Insight.getCurrentSpin();
+      if (current) {
+        return res.ok(current);
+      }
       let result = await Model.findAll({
         attributes: ['number'],
+        order: [["number", "DESC"]],
         raw: true
       });
       return res.ok(result.length > 0 ? result[0].number : 0);
@@ -19,44 +25,61 @@ module.exports = {
   nextSpin: async (req, res, next) => {
     try {
       let spins = await Model.findAll({
-        attributes: ['id', 'number'],
+        attributes: ['id', 'number', 'secret'],
+        order: [["number", "DESC"]],
         raw: true
       });
+      let secret = spins.length > 0 ? spins[0].secret : 4;
       let number = spins.length > 0 ? spins[0].number : 0;
-      let max = 36;
-      let min = 0;
-      let number_win = Math.floor(Math.random() * (max - min + 1)) + min;
-      let bettings = await UserBetting.findAll({ 
-        where: {
-          bet_spin: number
-        },
-        raw: true
-      })
-      for (let betting of bettings) {
-        let betWin = betting.bet_layout.indexOf(number_win) == -1 ? 0 : 1;
-        let betLost = betting.bet_unit - betWin;
-        await UserBetting.update({
-          number_win: number_win,
-          bet_win: betWin,
-          bet_lost: betLost
-        },
-        {
+      let newSecret = Math.floor(Math.random() * (10000000 - 1 + 1)) + 1;
+      let winNumber;
+      let tx = await Insight.sendBankSecretValueNewRound(secret, newSecret);
+      if (tx) {
+        await Model.update({
+          end_tx_hash: tx
+        }, {
           where: {
-            id: betting.id
+            id: spins[0].id
           }
         })
-      }
-      await Model.update({
-        number: number + 1
-      }, {
-        where: {
-          id: spins[0].id
+        await Model.create({
+          number: number + 1,
+          secret: newSecret,
+          start_tx_hash: tx
+        })
+
+        let spin = await Insight.getSpin(number);
+        winNumber = spin && spin.isEnded && spin.winNumber ? parseInt(spin.winNumber) : null;
+        // if (!winNumber) {
+        //   let max = 36;
+        //   let min = 0;
+        //   winNumber = Math.floor(Math.random() * (max - min + 1)) + min;
+        // }
+        let bettings = await UserBetting.findAll({ 
+          where: {
+            bet_spin: number
+          },
+          raw: true
+        })
+        for (let betting of bettings) {
+          let betWin = betting.bet_layout.indexOf(winNumber) == -1 ? 0 : 1;
+          let betLost = betting.bet_unit - betWin;
+          await UserBetting.update({
+            number_win: winNumber,
+            bet_win: betWin,
+            bet_lost: betLost
+          },
+          {
+            where: {
+              id: betting.id
+            }
+          })
         }
-      })
-      return res.ok(number + 1);
+      }     
+      return res.ok(winNumber);
     }
     catch (err) {
-      logger.error('get current spin:', err);
+      logger.error('nextSpin fail:', err);
       next(err);
     }
   }

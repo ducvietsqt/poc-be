@@ -30,6 +30,14 @@ module.exports = router;
  *         required: true
  *         type: integer
  *         format: int32
+ *       - name: offset
+ *         in: query
+ *         type: integer
+ *         format: int32
+ *       - name: limit
+ *         in: query
+ *         type: integer
+ *         format: int32
  *     produces:
  *       - application/json
  *     responses:
@@ -38,16 +46,23 @@ module.exports = router;
  *         examples:
  *           application/json:
  *             {
- *                 "data": [
+ *                 "data": {
+ *                    "items": [
  *                    {
                     bet_spin: 1,
                     bet_unit: 1,
                     bet_win: 0,
                     bet_lost: 1,
                     bet_layout: [15],
-                    number_win: 16
+                    number_win: 16,
+                    bet_tx_hash: '',
+                    bet_success: true
                   }
- *              ]
+              ],
+              "offset": 0,
+              "limit": 10,
+              "total": 1
+ *              }
  *             }
  *       400:
  *         description: Error

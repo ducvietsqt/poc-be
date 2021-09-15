@@ -8,6 +8,8 @@ const morgan = require('morgan');
 const http = require('http');
 const database = require('app/lib/database');
 const logger = require('app/lib/logger');
+const Insight = require('app/service/poc-insight');
+const Spin = require('app/model').spins;
 
 const app = express();
 app.use(morgan('dev'));
@@ -28,7 +30,7 @@ database.init(async err => {
   app.use('/', require('app/index'));
   app.use(express.static('public'));
   const server = http.createServer(app);
-  server.listen(process.env.PORT, function () {
+  server.listen(process.env.PORT, async function () {
     console.log(`server start successfully on port: ${process.env.PORT}`);
     var exec = require('child_process').exec;
     var cmd = 'npx sequelize-cli db:migrate';
@@ -37,6 +39,19 @@ database.init(async err => {
       console.log('stdout ', stdout);
       console.log('stderr ', stderr);
     })
+    var spin = await Insight.getSpin(0);
+    console.log('spin', spin);
+    if(!spin || !spin.bankHash) {
+      let tx = await Insight.setInitialBankHash(4);
+      console.log('tx: ', tx)
+      await Spin.update({
+        start_tx_hash: tx
+      }, {
+        where: {
+          number: 0
+        }
+      })
+    }
   });
   process.on('SIGINT', () => {
     process.exit(0);

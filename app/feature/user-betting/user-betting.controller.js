@@ -1,18 +1,29 @@
 const logger = require("app/lib/logger");
 const Model = require("app/model").user_bettings;
+const User = require("app/model").users;
+const Insight = require("app/service/poc-insight");
+
 
 module.exports = {
   index: async (req, res, next) => {
     try {
-      let result = await Model.findAll({
-        attributes: ['bet_spin', 'bet_unit', 'bet_win', 'bet_lost', 'bet_layout', 'number_win'],
+      const offset = parseInt(req.query.offset) || 0;
+      const limit = parseInt(req.query.limit) || 20;
+      const { count: total, rows: bets } = await Model.findAndCountAll({
+        attributes: ['bet_spin', 'bet_unit', 'bet_win', 'bet_lost', 'bet_layout', 'number_win', 'bet_tx_hash' ,'bet_success'],
         where: {
           user_id: req.params.user_id
         },
-        order: [["bet_spin", "DESC"]],
-        raw: true
+        offset,
+        limit,
+        order: [["bet_spin", "DESC"]]
       });
-      return res.ok(result);
+      return res.ok({
+        items: bets,
+        offset: offset,
+        limit: limit,
+        total: total
+      });
     }
     catch (err) {
       logger.error('get users:', err);
@@ -26,6 +37,17 @@ module.exports = {
         bet_layout: req.body.bet_layout,
         user_id: req.params.user_id,
         bet_spin: req.body.spin
+      }
+      let user = await User.findOne({
+        where: {
+          id: req.params.user_id
+        }
+      })
+      let tx = await Insight.placeBet(req.body.bet_layout, user.private_key);
+      if (!tx) {
+        data.bet_status = false;
+      } else {
+        data.bet_tx_hash = tx;
       }
       let betting = await Model.findOne({ 
         where: {
