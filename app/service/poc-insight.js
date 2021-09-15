@@ -3,7 +3,7 @@ const logger = require("app/lib/logger");
 const axios = require('axios');
 const api = axios.create({
   baseURL: config.insight.url,
-  timeout: 10000
+  timeout: 2000
 });
 
 module.exports = {
