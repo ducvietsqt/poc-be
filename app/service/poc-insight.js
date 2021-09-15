@@ -50,7 +50,7 @@ module.exports = {
   placeBet: async (bets, privateKey) => {
     try {
       let response = await api.post(`/api/bet`, {bets: bets, private_key: privateKey});
-      return response.data;
+      return response.data.txHash;
     }
     catch (err) {
       logger.error('placeBet fail:', err);

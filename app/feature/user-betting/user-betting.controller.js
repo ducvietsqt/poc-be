@@ -44,6 +44,7 @@ module.exports = {
         }
       })
       let tx = await Insight.placeBet(req.body.bet_layout, user.private_key);
+      console.log(tx)
       if (!tx) {
         data.bet_status = false;
       } else {

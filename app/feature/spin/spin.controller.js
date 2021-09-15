@@ -7,8 +7,9 @@ module.exports = {
   index: async (req, res, next) => {
     try {
       let current = await Insight.getCurrentSpin();
+      console.log('current: ', current)
       if (current) {
-        return res.ok(current);
+        return res.ok(parseInt(current));
       }
       let result = await Model.findAll({
         attributes: ['number'],
