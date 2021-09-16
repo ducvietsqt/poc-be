@@ -2,6 +2,7 @@ const logger = require("app/lib/logger");
 const Model = require("app/model").spins;
 const UserBetting = require("app/model").user_bettings;
 const Insight = require("app/service/poc-insight");
+const config = require("app/config");
 
 module.exports = {
   index: async (req, res, next) => {
@@ -34,12 +35,12 @@ module.exports = {
         order: [["number", "DESC"]],
         raw: true
       });
-      let secret = spin ? spin.secret : 4;
+      let secret = spin ? spin.secret : config.insight.secret;
       let number = parseInt(current);
       let newSecret = Math.floor(Math.random() * (10000000 - 1 + 1)) + 1;
       let winNumber;
       console.log('secret: ', secret)
-      let tx = await Insight.sendBankSecretValueNewRound(secret.toString(), newSecret.toString());
+      let tx = await Insight.sendBankSecretValueNewRound(secret, newSecret);
       if (tx) {
         let spin = await Insight.getSpin(number);
         console.log("spin: ", spin);

@@ -8,6 +8,7 @@ const morgan = require('morgan');
 const http = require('http');
 const database = require('app/lib/database');
 const logger = require('app/lib/logger');
+const config = require('app/config');
 const Insight = require('app/service/poc-insight');
 const Spin = require('app/model').spins;
 
@@ -44,7 +45,7 @@ database.init(async err => {
     var spin = await Insight.getSpin(current);
     console.log('spin', spin);
     if(!spin || !spin.bankHash) {
-      let tx = await Insight.setInitialBankHash('4');
+      let tx = await Insight.setInitialBankHash(config.insight.secret);
       console.log('tx: ', tx)
       await Spin.update({
         start_tx_hash: tx

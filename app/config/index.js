@@ -64,7 +64,8 @@ const config = {
   },
   enableSeed: process.env.ENABLE_SEED == "1",
   insight: { 
-    url: process.env.POC_INSIGHT || "http://62.171.139.103:3002"
+    url: process.env.POC_INSIGHT || "http://62.171.139.103:3002",
+    secret: process.env.SECRET ? parseInt(process.env.SECRET) : 6
   }
 };
 
