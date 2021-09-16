@@ -34,21 +34,9 @@ module.exports = {
       let number = spins.length > 0 ? spins[0].number : 0;
       let newSecret = Math.floor(Math.random() * (10000000 - 1 + 1)) + 1;
       let winNumber;
+      console.log('secret: ', secret)
       let tx = await Insight.sendBankSecretValueNewRound(secret, newSecret);
       if (tx) {
-        await Model.update({
-          end_tx_hash: tx
-        }, {
-          where: {
-            id: spins[0].id
-          }
-        })
-        await Model.create({
-          number: number + 1,
-          secret: newSecret,
-          start_tx_hash: tx
-        })
-
         let spin = await Insight.getSpin(number);
         winNumber = spin && spin.isEnded && spin.winNumber ? parseInt(spin.winNumber) : null;
         // if (!winNumber) {
@@ -56,26 +44,40 @@ module.exports = {
         //   let min = 0;
         //   winNumber = Math.floor(Math.random() * (max - min + 1)) + min;
         // }
-        let bettings = await UserBetting.findAll({ 
-          where: {
-            bet_spin: number
-          },
-          raw: true
-        })
-        for (let betting of bettings) {
-          let betWin = betting.bet_layout.indexOf(winNumber) == -1 ? 0 : 1;
-          let betLost = betting.bet_unit - betWin;
-          await UserBetting.update({
-            number_win: winNumber,
-            bet_win: betWin,
-            bet_lost: betLost
-          },
-          {
+        if (winNumber) {
+          let bettings = await UserBetting.findAll({ 
             where: {
-              id: betting.id
+              bet_spin: number
+            },
+            raw: true
+          })
+          for (let betting of bettings) {
+            let betWin = betting.bet_layout.indexOf(winNumber) == -1 ? 0 : 1;
+            let betLost = betting.bet_unit - betWin;
+            await UserBetting.update({
+              number_win: winNumber,
+              bet_win: betWin,
+              bet_lost: betLost
+            },
+            {
+              where: {
+                id: betting.id
+              }
+            })
+          }
+          await Model.update({
+            end_tx_hash: tx
+          }, {
+            where: {
+              id: spins[0].id
             }
           })
-        }
+          await Model.create({
+            number: number + 1,
+            secret: newSecret,
+            start_tx_hash: tx
+          })
+        }    
       }     
       return res.ok(winNumber);
     }
