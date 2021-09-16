@@ -87,5 +87,21 @@ module.exports = {
       logger.error('nextSpin fail:', err);
       next(err);
     }
+  },
+
+  getSpin: async (req, res, next) => {
+    try {
+      let result = await Model.findOne({
+        attributes: ['number', 'start_tx_hash', 'end_tx_hash'],
+        where: {
+          number: req.params.number
+        }
+      });
+      return res.ok(result);
+    }
+    catch (err) {
+      logger.error('get current spin:', err);
+      next(err);
+    }
   }
 }
