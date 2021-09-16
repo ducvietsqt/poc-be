@@ -39,10 +39,12 @@ database.init(async err => {
       console.log('stdout ', stdout);
       console.log('stderr ', stderr);
     })
-    var spin = await Insight.getSpin(0);
+    var current = await Insight.getCurrentSpin();
+    console.log('current', current);
+    var spin = await Insight.getSpin(current);
     console.log('spin', spin);
     if(!spin || !spin.bankHash) {
-      let tx = await Insight.setInitialBankHash(4);
+      let tx = await Insight.setInitialBankHash('4');
       console.log('tx: ', tx)
       await Spin.update({
         start_tx_hash: tx

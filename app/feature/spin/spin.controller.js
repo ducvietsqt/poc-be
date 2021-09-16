@@ -25,19 +25,24 @@ module.exports = {
   },
   nextSpin: async (req, res, next) => {
     try {
-      let spins = await Model.findAll({
+      let current = await Insight.getCurrentSpin();
+      let spin = await Model.findOne({
         attributes: ['id', 'number', 'secret'],
+        where: {
+          number: parseInt(current)
+        },
         order: [["number", "DESC"]],
         raw: true
       });
-      let secret = spins.length > 0 ? spins[0].secret : 4;
-      let number = spins.length > 0 ? spins[0].number : 0;
+      let secret = spin ? spin.secret : 4;
+      let number = parseInt(current);
       let newSecret = Math.floor(Math.random() * (10000000 - 1 + 1)) + 1;
       let winNumber;
       console.log('secret: ', secret)
-      let tx = await Insight.sendBankSecretValueNewRound(secret, newSecret);
+      let tx = await Insight.sendBankSecretValueNewRound(secret.toString(), newSecret.toString());
       if (tx) {
         let spin = await Insight.getSpin(number);
+        console.log("spin: ", spin);
         winNumber = spin && spin.isEnded && spin.winNumber ? parseInt(spin.winNumber) : null;
         // if (!winNumber) {
         //   let max = 36;
@@ -69,7 +74,7 @@ module.exports = {
             end_tx_hash: tx
           }, {
             where: {
-              id: spins[0].id
+              id: spin.id
             }
           })
           await Model.create({
