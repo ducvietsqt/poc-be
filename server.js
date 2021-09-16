@@ -44,16 +44,30 @@ database.init(async err => {
     console.log('current', current);
     var spin = await Insight.getSpin(current);
     console.log('spin', spin);
-    if(!spin || !spin.bankHash) {
+    if(!spin || spin.bankHash == '0x0000000000000000000000000000000000000000000000000000000000000000') {
       let tx = await Insight.setInitialBankHash(config.insight.secret);
-      console.log('tx: ', tx)
-      await Spin.update({
-        start_tx_hash: tx
-      }, {
+      console.log('tx: ', tx);
+      let spin = await Spin.findOne({
         where: {
-          number: 0
+          number: parseInt(current)
         }
       })
+      if (spin) {
+        await Spin.update({
+          secret: config.insight.secret,
+          start_tx_hash: tx
+        }, {
+          where: {
+            number: current
+          }
+        })
+      } else {
+        await Spin.create({
+          number: parseInt(current),
+          secret: config.insight.secret,
+          start_tx_hash: tx
+        })
+      }
     }
   });
   process.on('SIGINT', () => {
