@@ -46,7 +46,7 @@ module.exports = {
         let spin = await Insight.getSpin(number);
         console.log("spin: ", spin);
         winNumber = spin && spin.isEnded ? parseInt(spin.winNumber) : null;
-        if (winNumber) {
+        if (winNumber != null) {
           let bettings = await UserBetting.findAll({ 
             where: {
               bet_spin: number
